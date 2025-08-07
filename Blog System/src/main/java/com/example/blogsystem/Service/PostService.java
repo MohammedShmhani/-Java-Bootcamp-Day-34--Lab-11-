@@ -2,7 +2,9 @@ package com.example.blogsystem.Service;
 
 import com.example.blogsystem.Api.ApiException;
 import com.example.blogsystem.Model.Post;
+import com.example.blogsystem.Repository.CategoryRepository;
 import com.example.blogsystem.Repository.PostRepository;
+import com.example.blogsystem.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
+    private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
 
     public List<Post> getPosts() {
@@ -42,8 +46,17 @@ public class PostService {
     }
 
     public void addPost(Post post) {
+        if (!categoryRepository.existsById(post.getCategoryId())) {
+            throw new ApiException("Category not found");
+        }
+
+        if (!userRepository.existsById(post.getUserId())) {
+            throw new ApiException("User not found");
+        }
+
         postRepository.save(post);
     }
+
 
     //********************************************************************
     //get all post by user_id
