@@ -1,8 +1,10 @@
 package com.example.blogsystem.Service;
 
 import com.example.blogsystem.Api.ApiException;
-import com.example.blogsystem.Model.Category;
-import com.example.blogsystem.Repository.CategoryRepository;
+import com.example.blogsystem.Model.Comment;
+import com.example.blogsystem.Repository.CommentRepository;
+import com.example.blogsystem.Repository.PostRepository;
+import com.example.blogsystem.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,30 +12,74 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CategoryService {
-    private final CategoryRepository categoryRepository;
+public class CommentService {
 
-    public List<Category> getCategories() {
-        return categoryRepository.findAll();
+    private final CommentRepository commentRepository;
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+
+
+    public void updateComment(Integer id, Comment comment) {
+        Comment c1 = commentRepository.findCommentByCommentId(id);
+        if (c1 == null) {
+            throw new ApiException("COMMENT_NOT_FOUND");
+        }
+        c1.setCommentDate(comment.getCommentDate());
+        c1.setUserId(comment.getUserId());
+        c1.setContent(comment.getContent());
+        c1.setPostId(comment.getPostId());
+        commentRepository.save(c1);
+
     }
 
-    public void addCategory(Category category) {
-        categoryRepository.save(category);
+    public void deleteComment(Integer id) {
+        Comment c1 = commentRepository.findCommentByCommentId(id);
+        if (c1 == null) {
+            throw new ApiException("COMMENT_NOT_FOUND");
+        }
+        commentRepository.delete(c1);
     }
 
-    public void deleteCategory(Integer categoryId) {
-        Category category = categoryRepository.findCategoryByCategoryId(categoryId);
-        if (category == null)
-            throw new ApiException("Category not found");
-        categoryRepository.delete(category);
-
+    public List<Comment> getAllComments() {
+        return commentRepository.findAll();
     }
 
-    public void updateCategory(Integer id, Category category) {
-        Category category1 = categoryRepository.findCategoryByCategoryId(id);
-        if (category1 == null)
-            throw new ApiException("Category not found");
-        category1.setCategoryName(category.getCategoryName());
-        categoryRepository.save(category1);
+    public void addComment(Comment comment) {
+
+        boolean userExists = userRepository.existsById(comment.getUserId());
+        if (!userExists) {
+            throw new ApiException("User not found");
+        }
+
+        boolean postExists = postRepository.existsById(comment.getPostId());
+        if (!postExists) {
+            throw new ApiException("Post not found");
+        }
+
+        commentRepository.save(comment);
     }
+
+    //***************************************************************************
+    //Get All Comments for a Specific User
+    public List<Comment> findCommentByUserId(Integer userId) {
+        List<Comment> comment = commentRepository.findCommentByUserId(userId);
+        if (comment.isEmpty()) {
+            throw new ApiException("COMMENT_NOT_FOUND");
+        }
+        return comment;
+    }
+    //***************************************************************************
+
+
+    //***************************************************************************
+    //Get All Comments for a Specific Post
+    public List<Comment> findCommentByPostId(Integer postId) {
+        List<Comment> comment = commentRepository.findCommentByPostId(postId);
+        if (comment.isEmpty()) {
+            throw new ApiException("COMMENT_NOT_FOUND");
+        }
+        return comment;
+    }
+    //***************************************************************************
+
 }
